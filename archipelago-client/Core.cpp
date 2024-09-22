@@ -6,11 +6,13 @@
 #include "AutoEquip.h"
 #include "GameHook.h"
 #include "ItemRandomiser.h"
+#include "ItemInfo.h"
 
 CCore* Core;
 CGameHook* GameHook;
 CItemRandomiser* ItemRandomiser;
 CAutoEquip* AutoEquip;
+CItemInfo* ItemInfo;
 CArchipelago* ArchipelagoInterface;
 
 using nlohmann::json;
@@ -23,6 +25,7 @@ CCore::CCore(modengine::ModEngineExtensionConnector* connector)
 	GameHook = new CGameHook();
 	ItemRandomiser = new CItemRandomiser();
 	AutoEquip = new CAutoEquip();
+	ItemInfo = new CItemInfo();
 }
 
 void CCore::on_attach() {

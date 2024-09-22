@@ -126,6 +126,7 @@
     <ClCompile Include="AutoEquip.cpp" />
     <ClCompile Include="Core.cpp" />
     <ClCompile Include="GameHook.cpp" />
+    <ClCompile Include="ItemInfo.cpp" />
     <ClCompile Include="ItemRandomiser.cpp" />
     <ClCompile Include="NoRequirements.cpp" />
     <ClCompile Include="ArchipelagoInterface.cpp" />
@@ -141,6 +142,7 @@
     <ClInclude Include="Core.h" />
     <ClInclude Include="GameHook.h" />
     <ClInclude Include="ArchipelagoInterface.h" />
+    <ClInclude Include="ItemInfo.h" />
     <ClInclude Include="Params.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="subprojects\asio\asio\include\asio.hpp" />

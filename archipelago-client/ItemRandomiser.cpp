@@ -78,6 +78,7 @@ VOID CItemRandomiser::RandomiseItem(SItemBuffer* pItemBuffer) {
 }
 
 VOID CItemRandomiser::ControlWeaponLevel(SItemBufferEntry* dItem) {
+
 	auto dItemType = (ItemType)(dItem->id >> 0x1C);
 	if (dItemType != ItemType::weapon) return;
 	if ((dItem->id >> 0x10) == 6) return; // ammo
