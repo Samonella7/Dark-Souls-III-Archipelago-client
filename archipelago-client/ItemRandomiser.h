@@ -31,6 +31,7 @@ public:
 
 private:
 	virtual VOID RandomiseItem(SItemBuffer* pItemBuffer);
+	virtual VOID ControlWeaponLevel(SItemBufferEntry* dItem);
 	virtual VOID OnGetSyntheticItem(EquipParamGoodsRow* row);
 	virtual VOID OnGetSyntheticItem(uint32_t archipelagoId1, uint32_t archipelagoId2);
 };

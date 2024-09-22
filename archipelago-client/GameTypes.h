@@ -81,7 +81,7 @@ struct WorldChrMan : public FD4Singleton<WorldChrMan, "WorldChrMan"> {
 	SPlayerIns* mainCharacter;
 };
 
-/// A single item int he player's inventory.
+/// A single item in the player's inventory.
 struct InventorySlotItem {
 	uint32_t handle;
 	uint32_t itemId;

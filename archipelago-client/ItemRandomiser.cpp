@@ -49,7 +49,7 @@ VOID CItemRandomiser::RandomiseItem(SItemBuffer* pItemBuffer) {
 				GameHook->grantPathOfTheDragon();
 				indexToRemove = i;
 			} else if (row != NULL && row->basicPrice != 0) {
-				// Since the function this hooks into only gets called after fItemRandomiser, we
+				// Since the function this hooks into only gets called after HookedItemGib, we
 				// have to manually make sure it sees the original synthetic item so it can notify
 				// the server that the location was checked.
 				OnGetSyntheticItem(row);
@@ -61,6 +61,8 @@ VOID CItemRandomiser::RandomiseItem(SItemBuffer* pItemBuffer) {
 		else {
 			//Nothing to do, this is a vanilla item so we will let it go to the player's inventory	
 		}
+
+		ItemRandomiser->ControlWeaponLevel(dItem);
 
 		spdlog::trace("OUT itemID: {}", dItem->id);
 	};
@@ -75,8 +77,31 @@ VOID CItemRandomiser::RandomiseItem(SItemBuffer* pItemBuffer) {
 	return;
 }
 
+VOID CItemRandomiser::ControlWeaponLevel(SItemBufferEntry* dItem) {
+	auto dItemType = (ItemType)(dItem->id >> 0x1C);
+	if (dItemType != ItemType::weapon) return;
+	if ((dItem->id >> 0x10) == 6) return; // ammo
+
+	spdlog::log(spdlog::level::info, "Controlling weapon level of {}", dItem->id);
+
+	// find titanite count
+	DWORD titaniteId = 0x400003E8;
+	auto itemList = GameDataMan::instance()->localPlayerData->equipGameData1.equipInventoryData.list;
+	uint32_t titaniteCount = 0;
+	for (uint32_t i = 0; i < itemList.slotIdCap; i++) {
+		auto item = itemList.itemsAboveCap[i];
+		if (item.itemId == titaniteId) {
+			titaniteCount = item.itemCount;
+			break;
+		}
+	}
+
+	auto baseId = dItem->id - (dItem->id % 100);
+	dItem->id = baseId + titaniteCount;
+}
+
 // This function is called once each time the player receives an item with an ID they don't already
-// have in their inventory. It's called _after_ fItemRandomiser, so it'll only see the items that
+// have in their inventory. It's called _after_ HookedItemGib, so it'll only see the items that
 // that has replaced.
 uint64_t CItemRandomiser::HookedOnGetItem(void* pEquipInventoryData, uint32_t qItemCategory,
 		uint32_t qItemID, uint32_t qCount, void* qUnknown2) {
