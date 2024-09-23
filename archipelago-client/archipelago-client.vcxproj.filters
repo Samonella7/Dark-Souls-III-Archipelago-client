@@ -22,9 +22,6 @@
     <Filter Include="Fichiers sources\ArchipelagoClient">
       <UniqueIdentifier>{df84d9bb-1511-470a-a89a-f35a9682782a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Fichiers de test">
-      <UniqueIdentifier>{e26d627a-4500-429a-992c-6b1086ad8dcf}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="subprojects\minhook\src\buffer.c">
@@ -64,7 +61,7 @@
       <Filter>Fichiers sources</Filter>
     </ClCompile>
     <ClCompile Include="ItemInfo.cpp">
-      <Filter>Fichiers sources</Filter>
+      <Filter>Fichiers sources\GameHook</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -4,11 +4,13 @@
 #include "Core.h"
 #include "GameHook.h"
 #include "ItemRandomiser.h"
+#include "ItemInfo.h"
 
 extern CCore* Core;
 extern CItemRandomiser* ItemRandomiser;
 extern CGameHook* GameHook;
 extern CAutoEquip* AutoEquip;
+extern CItemInfo* ItemInfo;
 
 void CItemRandomiser::HookedItemGib(void* mapItemMan, SItemBuffer* pItemBuffer, int32_t* pItemData) {
 
@@ -79,26 +81,43 @@ VOID CItemRandomiser::RandomiseItem(SItemBuffer* pItemBuffer) {
 
 VOID CItemRandomiser::ControlWeaponLevel(SItemBufferEntry* dItem) {
 
-	auto dItemType = (ItemType)(dItem->id >> 0x1C);
-	if (dItemType != ItemType::weapon) return;
-	if ((dItem->id >> 0x10) == 6) return; // ammo
-
-	spdlog::log(spdlog::level::info, "Controlling weapon level of {}", dItem->id);
-
-	// find titanite count
-	DWORD titaniteId = 0x400003E8;
-	auto itemList = GameDataMan::instance()->localPlayerData->equipGameData1.equipInventoryData.list;
-	uint32_t titaniteCount = 0;
-	for (uint32_t i = 0; i < itemList.slotIdCap; i++) {
-		auto item = itemList.itemsAboveCap[i];
-		if (item.itemId == titaniteId) {
-			titaniteCount = item.itemCount;
-			break;
-		}
+	auto type = ItemInfo->GetWeaponUpgradeType(dItem->id);
+	uint32_t upgradeItemId;
+	switch (type) {
+	case WeaponUpgradeType::regularInfusible:
+	case WeaponUpgradeType::regularUninfusible:
+		upgradeItemId = 0x400003E8;
+		spdlog::trace("regular reinforce");
+		break;
+	case WeaponUpgradeType::twinkling:
+		upgradeItemId = 0x40000406;
+		spdlog::trace("twinkling reinforce");
+		break;
+	case WeaponUpgradeType::scale:
+		upgradeItemId = 0x400003FC;
+		spdlog::trace("scale reinforce");
+		break;
+	default: // WeaponUpgradeType::none
+		return;
 	}
 
+	// find titanite count
+	auto count = FindUpgradeCount(upgradeItemId);
+
 	auto baseId = dItem->id - (dItem->id % 100);
-	dItem->id = baseId + titaniteCount;
+	dItem->id = baseId + count;
+}
+
+int CItemRandomiser::FindUpgradeCount(uint32_t dItemID) {
+
+	auto itemList = GameDataMan::instance()->localPlayerData->equipGameData1.equipInventoryData.list;
+	for (uint32_t i = 0; i < itemList.slotIdCap; i++) {
+		auto item = itemList.itemsAboveCap[i];
+		if (item.itemId == dItemID) {
+			return item.itemCount;
+		}
+	}
+	return 0;
 }
 
 // This function is called once each time the player receives an item with an ID they don't already
