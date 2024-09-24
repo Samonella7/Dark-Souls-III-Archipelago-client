@@ -79,10 +79,8 @@ std::optional<DetailedItemType> CItemInfo::GetDetailedItemType(uint32_t dItemID)
 	};
 	case ItemType::goods: return DetailedItemType::goods;
 	default: {
-		std::ostringstream stream;
-		stream << "Invalid item type: " << ((uint32_t)baseItemType) << " (" << std::hex << dItemID << ")";
-		Core->Panic(stream.str().c_str(), "...\\Source\\AutoEquip\\AutoEquip.cpp", HE_InvalidItemType, 0);
-		return DetailedItemType::goods;
+		spdlog::trace("Unrecognized item type: {}", (byte)baseItemType);
+		return std::nullopt;
 	};
 	};
 };
@@ -126,8 +124,8 @@ std::optional<WeaponUpgradeType> CItemInfo::GetWeaponUpgradeType(uint32_t dItemI
 
 bool CItemInfo::IsItemInList(uint32_t dItem, uint32_t* pArray) {
 	if (!pArray) {
-		Core->Panic("Null array pointer!", "...\\Source\\AutoEquip\\AutoEquip.cpp", FE_NullArray, 1);
-		int3
+		spdlog::trace("Null array pointer in ItemInfo::IsItemInList");
+		return false;
 	};
 
 	while (*pArray) {
