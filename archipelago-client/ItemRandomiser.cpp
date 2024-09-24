@@ -61,9 +61,10 @@ VOID CItemRandomiser::RandomiseItem(SItemBuffer* pItemBuffer) {
 			}
 		}
 		else {
-			//Nothing to do, this is a vanilla item so we will let it go to the player's inventory	
+			// This is already a vanilla item
 		}
 
+		// TODO check randomizer settings and skip if this isn't turned on
 		ItemRandomiser->ControlWeaponLevel(dItem);
 
 		spdlog::trace("OUT itemID: {}", dItem->id);
@@ -79,36 +80,122 @@ VOID CItemRandomiser::RandomiseItem(SItemBuffer* pItemBuffer) {
 	return;
 }
 
+// Edits the item entry's weapon level based on collected upgrades. does nothing to non-weapon items.
+// TODO use "Progressive Upgrade" key items isntead of titanite to prevent player wasting materials.
+// that ^ is how i justify this sprawling duplicate code ok? don't judge me
 VOID CItemRandomiser::ControlWeaponLevel(SItemBufferEntry* dItem) {
 
 	auto type = ItemInfo->GetWeaponUpgradeType(dItem->id);
-	uint32_t upgradeItemId;
-	switch (type) {
-	case WeaponUpgradeType::regularInfusible:
-	case WeaponUpgradeType::regularUninfusible:
-		upgradeItemId = 0x400003E8;
-		spdlog::trace("regular reinforce");
-		break;
-	case WeaponUpgradeType::twinkling:
-		upgradeItemId = 0x40000406;
-		spdlog::trace("twinkling reinforce");
-		break;
-	case WeaponUpgradeType::scale:
-		upgradeItemId = 0x400003FC;
-		spdlog::trace("scale reinforce");
-		break;
-	default: // WeaponUpgradeType::none
+	if (!type.has_value())
 		return;
+
+	uint32_t upgradeCount;
+	bool isSlabEligible = false;
+	switch (type.value()) {
+		case WeaponUpgradeType::regularInfusible:
+		case WeaponUpgradeType::regularUninfusible: {
+			spdlog::trace("regular reinforce");
+
+			auto shardId = 0x400003E8;
+			auto itemCount = FindUpgradeCount(shardId);
+			if (itemCount < 2) {
+				upgradeCount = 0;
+				break;
+			}
+			else if (itemCount < 6) {
+				upgradeCount = 1;
+				break;
+			}
+			else if (itemCount < 12) {
+				upgradeCount = 2;
+				break;
+			}
+
+			auto largeShardId = 0x400003E9;
+			itemCount = FindUpgradeCount(largeShardId);
+			if (itemCount < 2) {
+				upgradeCount = 3;
+				break;
+			}
+			else if (itemCount < 6) {
+				upgradeCount = 4;
+				break;
+			}
+			else if (itemCount < 12) {
+				upgradeCount = 5;
+				break;
+			}
+
+			auto chunckId = 0x400003EA;
+			itemCount = FindUpgradeCount(chunckId);
+			if (itemCount < 2)
+				upgradeCount = 6;
+			else if (itemCount < 6)
+				upgradeCount = 7;
+			else if (itemCount < 12)
+				upgradeCount = 8;
+			else {
+				upgradeCount = 9;
+				isSlabEligible = true;
+			}
+			break;
+		}
+		case WeaponUpgradeType::twinkling: {
+			spdlog::trace("twinkling reinforce");
+			auto twinklingId = 0x40000406;
+			auto itemCount = FindUpgradeCount(twinklingId);
+			if (itemCount < 1)
+				upgradeCount = 0;
+			else if (itemCount < 3)
+				upgradeCount = 1;
+			else if (itemCount < 7)
+				upgradeCount = 2;
+			else if (itemCount < 15)
+				upgradeCount = 3;
+			else {
+				upgradeCount = 4;
+				isSlabEligible = true;
+			}
+			break;
+		}
+		case WeaponUpgradeType::scale: {
+			spdlog::trace("scale reinforce");
+			auto scaleId = 0x400003FC;
+			auto itemCount = FindUpgradeCount(scaleId);
+			if (itemCount < 1)
+				upgradeCount = 0;
+			else if (itemCount < 3)
+				upgradeCount = 1;
+			else if (itemCount < 7)
+				upgradeCount = 2;
+			else if (itemCount < 15)
+				upgradeCount = 3;
+			else {
+				upgradeCount = 4;
+				isSlabEligible = true;
+			}
+			break;
+		}
+		default: {
+			// WeaponUpgradeType::none
+			return;
+		}
 	}
 
-	// find titanite count
-	auto count = FindUpgradeCount(upgradeItemId);
+	if (isSlabEligible) {
+		auto slabId = 0x400003EB;
+		auto itemCount = FindUpgradeCount(slabId);
+		if (itemCount > 0)
+			upgradeCount++;
+	}
 
 	auto baseId = dItem->id - (dItem->id % 100);
-	dItem->id = baseId + count;
+	dItem->id = baseId + upgradeCount;
 }
 
-int CItemRandomiser::FindUpgradeCount(uint32_t dItemID) {
+// searches the player's inventory for the given item id and returns how many of it there are.
+// TODO currently searches itemsAboveCap. but after making key items for progressive upgrades, should use itemsBelowCap
+uint32_t CItemRandomiser::FindUpgradeCount(uint32_t dItemID) {
 
 	auto itemList = GameDataMan::instance()->localPlayerData->equipGameData1.equipInventoryData.list;
 	for (uint32_t i = 0; i < itemList.slotIdCap; i++) {

@@ -1,3 +1,5 @@
+#include <optional>
+
 #include "ItemInfo.h"
 #include "AutoEquip.h"
 #include "GameHook.h"
@@ -31,7 +33,7 @@ uint32_t pBodyList[];
 uint32_t pHandsList[];
 uint32_t pLegsList[];
 
-DetailedItemType CItemInfo::GetDetailedItemType(uint32_t dItemID) {
+std::optional<DetailedItemType> CItemInfo::GetDetailedItemType(uint32_t dItemID) {
 
 	auto baseItemType = (ItemType)(dItemID >> 0x1C);
 	switch (baseItemType) {
@@ -39,7 +41,7 @@ DetailedItemType CItemInfo::GetDetailedItemType(uint32_t dItemID) {
 		if ((dItemID >> 0x10) == 6) return DetailedItemType::ammo;
 
 		// strip infusion and reinforcements
-		dItemID = (dItemID / 10000) * 10000;
+		dItemID = dItemID - (dItemID % 10000);
 
 		if ((dItemID & 0xFF000000) == 0x01000000) return DetailedItemType::shield;
 
@@ -58,7 +60,7 @@ DetailedItemType CItemInfo::GetDetailedItemType(uint32_t dItemID) {
 		else if (IsItemInList(dItemID, pScaleBows)) return DetailedItemType::bow;
 		else {
 			spdlog::trace("Unrecognized weapon: {}", dItemID);
-			return DetailedItemType::unrecognizedWeapon;
+			return std::nullopt;
 		}
 	};
 	case ItemType::protector: {
@@ -68,7 +70,7 @@ DetailedItemType CItemInfo::GetDetailedItemType(uint32_t dItemID) {
 		else if (IsItemInList(dItemID, pLegsList)) return DetailedItemType::legsArmor;
 		else {
 			spdlog::trace("Unrecognized protector item: {}", dItemID);
-			return DetailedItemType::unrecognizedArmor;
+			return std::nullopt;
 		}
 	};
 	case ItemType::accessory: {
@@ -85,7 +87,7 @@ DetailedItemType CItemInfo::GetDetailedItemType(uint32_t dItemID) {
 	};
 };
 
-WeaponUpgradeType CItemInfo::GetWeaponUpgradeType(uint32_t dItemID) {
+std::optional<WeaponUpgradeType> CItemInfo::GetWeaponUpgradeType(uint32_t dItemID) {
 
 	auto baseItemType = (ItemType)(dItemID >> 0x1C);
 	if (baseItemType != ItemType::weapon)
@@ -117,7 +119,9 @@ WeaponUpgradeType CItemInfo::GetWeaponUpgradeType(uint32_t dItemID) {
 	else if (IsItemInList(dItemID, pScaleCatalysts)) return WeaponUpgradeType::scale;
 	else if (IsItemInList(dItemID, pScaleBows)) return WeaponUpgradeType::scale;
 
-	else return WeaponUpgradeType::none;
+	else if (IsItemInList(dItemID, pUnupgradeableMeleeWeapons)) return WeaponUpgradeType::none;
+
+	else return std::nullopt;
 };
 
 bool CItemInfo::IsItemInList(uint32_t dItem, uint32_t* pArray) {
@@ -891,7 +895,7 @@ extern uint32_t pLegsList[]{
 	0x00000000
 };
 
-// The rest of these aren't currently needed, but are correctly grouped for reference (albeit untested):
+// The rest of these aren't currently needed, but are correctly grouped for reference/future use:
 
 //extern uint32_t pCovenantsList[]{
 //    0x20002710, // "Blade of the Darkmoon"

@@ -32,7 +32,7 @@ public:
 private:
 	virtual VOID RandomiseItem(SItemBuffer* pItemBuffer);
 	virtual VOID ControlWeaponLevel(SItemBufferEntry* dItem);
-	virtual int FindUpgradeCount(uint32_t dItemID);
+	virtual uint32_t FindUpgradeCount(uint32_t dItemID);
 	virtual VOID OnGetSyntheticItem(EquipParamGoodsRow* row);
 	virtual VOID OnGetSyntheticItem(uint32_t archipelagoId1, uint32_t archipelagoId2);
 };

@@ -56,10 +56,14 @@ VOID CAutoEquip::AutoEquipItem(SItemBuffer* pItemBuffer) {
 std::optional<EquipSlot> CAutoEquip::SortItem(uint32_t dItemID) {
 
 	auto detailedItemType = ItemInfo->GetDetailedItemType(dItemID);
-	switch (detailedItemType) {
+	if (!detailedItemType.has_value())
+		return std::nullopt;
+
+	switch (detailedItemType.value()) {
 		case DetailedItemType::meleeWeapon:
 		case DetailedItemType::catalyst:
 		case DetailedItemType::bow: {
+			// TODO add settings to allow customizing which slots these weapon types go in (shields too)
 			return EquipSlot::rightHand1;
 		};
 		case DetailedItemType::shield: {
